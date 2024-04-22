@@ -1,0 +1,143 @@
+<script>
+    class ErrorHelper {
+        constructor() {
+            this.errors = document.getElementById("errors");
+            this.errorsContainer = document.getElementById("errors-container");
+        }
+        async showError(data) {
+            this.errors.innerText = data;
+            this.errorsContainer.style.display = "block";
+            setTimeout(() => {
+                this.errorsContainer.style.display = "none";
+            }, 5000);
+        }
+    }
+    const submitBtn = document.getElementById("submit-btn");
+    class ButtonHelper {
+        constructor() {
+            this.submitBtn = submitBtn;
+            this.submitTxt = document.getElementById("submit-text");
+            this.submitLoader = document.getElementById("submit-loader");
+            this.errors = document.getElementById("errors");
+            this.errorsContainer = document.getElementById("errors-container");
+        }
+
+        toggleSubmit() {
+            this.submitBtn.disabled = !this.submitBtn.disabled;
+            this.submitTxt.style.display = this.submitTxt.style.display === "none" ? "" : "none";
+            this.submitLoader.style.display = this.submitLoader.style.display === "none" ? "" : "none";
+        }
+
+        async showError(helper, data) {
+            this.submitBtn.classList.remove("btn-warning");
+            this.submitBtn.classList.add("btn-danger");
+            this.submitTxt.innerText = "Error";
+            console.log(helper, data)
+            helper.showError(data);
+            setTimeout(() => {
+                this.submitBtn.classList.remove("btn-danger");
+                this.submitBtn.classList.add("btn-warning");
+                this.submitTxt.innerText = "Submit";
+            }, 2000);
+        }
+
+        showSuccess() {
+            this.submitBtn.classList.remove("btn-warning");
+            this.submitBtn.classList.add("btn-success");
+        }
+
+        showProcessing() {
+            this.submitBtn.classList.remove("btn-warning");
+            this.submitBtn.classList.add("btn-info");
+            this.toggleSubmit();
+        }
+
+
+    }
+
+    class JWTHelper {
+        constructor() {
+            this.cookieRegex = new RegExp(`(^| )auth_token=([^;]+)`);
+            this.jwt = this.retrieveToken();
+            this.jwtData = this.parseJwt(this.jwt);
+        }
+
+        retrieveToken() {
+            const match = document.cookie.match(this.cookieRegex)
+            if (match) {
+                return match[2]
+            } else {
+                return ""
+            }
+        }
+
+        parseJwt(token) {
+            if (!token) {
+                return null;
+            }
+            const base64Url = token.split('.')[1];
+            const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+            const jsonPayload = decodeURIComponent(window.atob(base64).split('').map(function(c) {
+                return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+            }).join(''));
+
+            return JSON.parse(jsonPayload);
+        }
+
+        getJWT() {
+            return this.jwt;
+        }
+        getJWTData() {
+            return this.jwtData;
+        }
+    }
+
+    const submit = (url, data, redirect=true) => {
+        return fetch(url, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(data),
+        }).then(response => {
+            console.log("response", response);
+            if (!response.ok) {
+                response.json().then(data => {
+                    btnHelper.showError(errorHelper, data)
+                });
+                return
+            }
+            btnHelper.showSuccess()
+            if (redirect) {
+                setTimeout(() => {
+                    response.json().then(data => window.location.href = data.next)
+                }, 1000);
+            }
+        }).catch(error => {
+            btnHelper.showError(error);
+        });
+    }
+
+    const btnHelper = new ButtonHelper();
+    const errorHelper = new ErrorHelper();
+    const jwtHelper = new JWTHelper();
+
+
+    const showSubmit = () => {
+        submitBtn.classList.remove("btn-info");
+        submitBtn.classList.add("btn-warning");
+        btnHelper.toggleSubmit();
+    }
+
+    const signOut = () => {
+        fetch("/user/sign-out", {}).then(
+            (res) => {
+                if (res.ok) {
+                    document.cookie = "auth_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+                    window.location.href = "/";
+                }
+            }
+        )
+    }
+
+</script>

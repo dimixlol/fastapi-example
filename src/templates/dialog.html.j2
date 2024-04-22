@@ -1,0 +1,78 @@
+{% extends "base.html.j2" %}
+
+{% block classes_main %}
+row vh-100 align-content-center container
+{% endblock %}
+
+{% block content %}
+    <div class="w-100 rounded py-4 px-5 br-15" style="box-shadow: 0 4px 8px 0 rgba(7, 7, 26, 0.2), 0 6px 20px 0 rgba(7, 7, 26, 0.19);">
+        <div class="container w-100">
+            <div class="row justify-content-between">
+                <h3 class="col-1">Generation</h3>
+                <div class="col-2">Username: <span id="username"></span></div>
+            </div>
+            <div class="row justify-content-between">
+                <div class="col-sm-7">
+                    <label for="input" class="py-2 d-block">Input</label>
+                    <textarea
+                        name="input"
+                        id="input"
+                        class="br-15 p-4 w-100 text-white elevated"
+                        rows="15"
+                        placeholder="Lorem ipsum dolor sit amet..."
+                    ></textarea>
+                    <div class="row pt-4 mt-3 ps-3 gap-2">
+                        <button class="btn col-sm-2 btn-warning" id="submit-btn" onclick="sendMessage()">
+                                <span id="submit-text">Generate</span>
+                                <span class="spinner-border spinner-border-sm" role="status" id="submit-loader" style="display: none">
+                                    <span class="sr-only"></span>
+                                </span>
+                        </button>
+                        <button class="btn col-sm-2 btn-danger" onclick="signOut()">Sign out</button>
+                    </div>
+                </div>
+                <div class="col-sm-5">
+                    <label for="output" class="py-2 d-block">Output</label>
+                    <textarea
+                        readonly
+                        name="output"
+                        id="output"
+                        class="br-15 p-4 text-white w-100 elevated"
+                        rows="25"
+                        style="font-size: 12px"
+                    ></textarea>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% include 'scripts.html.j2' %}
+    <script>
+        {
+            const output = document.getElementById('output')
+            const input = document.getElementById('input');
+            (function (data) {
+                if (data) {
+                    document.getElementById('username').innerText = data.username
+                } else {
+                    window.location.href = '/'
+                }
+            })(jwtHelper.getJWTData())
+
+            const ws = new WebSocket(`{{ ws_link }}/${jwtHelper.getJWT()}`);
+
+            function sendMessage() {
+                btnHelper.showProcessing()
+                const message = JSON.stringify({
+                    message: input.value
+                })
+                ws.send(message)
+            }
+
+            ws.onmessage = (event) => {
+                output.value = JSON.stringify(JSON.parse(event.data), undefined, 4)
+                setTimeout(showSubmit, 500)
+
+            };
+        }
+    </script>
+{% endblock %}

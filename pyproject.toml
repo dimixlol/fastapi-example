@@ -1,0 +1,38 @@
+[tool.pylint.main]
+ignore = ["alembic", "tests"]
+
+[tool.pylint."messages control"]
+disable = [
+      "missing-docstring",
+      "fixme",
+      "ungrouped-imports",
+      "wrong-import-order",
+      "missing-module-docstring",
+      "logging-fstring-interpolation",
+      "import-error",
+      "no-name-in-module",
+      "too-few-public-methods",
+      "broad-except",
+      "unused-argument",
+      "invalid-name",
+      "missing-docstring",
+      "no-member",
+      "protected-access",
+      "too-many-branches",
+      "arguments-differ",
+      "too-many-public-methods",
+      "too-many-instance-attributes",
+      "too-many-ancestors",
+      "cyclic-import",
+      "logging-too-many-args",
+      "duplicate-code",
+      "unsubscriptable-object",
+      "function-redefined",
+]
+extension-pkg-whitelist = "pydantic"
+
+[tool.pylint.variables]
+ignored-argument-names = "\"args|kwargs\""
+
+[tool.isort]
+profile = "black"

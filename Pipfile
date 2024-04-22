@@ -1,0 +1,24 @@
+[requires]
+python_version = ">=3.11"
+
+[packages]
+alembic = { version = "~=1.13.0" }
+asyncpg = { version = "~=0.29.0" }
+celery = { version = "~=5.3.6", extras=["sqs"] }
+boto3 = { version = "~=1.34.0" }
+cryptography = { version = "~=42.0.5" }
+fastapi = { version = "~=0.110.2",  extras=["all"]}
+pydantic = { version = "~=2.7.0", extras=["email", "dotenv"]}
+pydantic-settings = { version = "~=2.2.1" }
+websockets = { version = "~=12.0" }
+uvicorn = { version = "~=0.29.0" }
+sqlalchemy = { version = "~=2.0.29" }
+psycopg2 = { version = "~=2.9.9" }
+python-jose = { version = "~=3.3.0" }
+jinja2 = { version = "~=3.1.3" }
+requests = { version = "~=2.31.0" }
+
+[dev-packages]
+pylint = "*"
+black = "*"
+isort = "*"
