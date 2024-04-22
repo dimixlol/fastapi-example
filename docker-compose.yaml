@@ -1,7 +1,7 @@
 
 x-db-config: &db-config
-  DB_URL: "postgresql+asyncpg://${DB_USER}:${DB_PASSWORD}@postgres:5432/${DB_NAME}"
-  DB_URL_SYNC: "postgresql://${DB_USER}:${DB_PASSWORD}@postgres:5432/${DB_NAME}"
+  DB_URL_ASYNC: "${DB_URL_ASYNC:-postgresql+asyncpg://${DB_USER}:${DB_PASSWORD}@postgres:5432/${DB_NAME}}"
+  DB_URL_SYNC: "${DB_URL_SYNC:-postgresql://${DB_USER}:${DB_PASSWORD}@postgres:5432/${DB_NAME}}"
 
 x-aws-config: &aws-config
   AWS_DEFAULT_REGION: "us-east-1"
@@ -18,7 +18,7 @@ x-aws-config: &aws-config
 x-celery-config: &celery-config
   CELERY_BROKER_URL: "sqs://test:test@localstack:4566"
   CELERY_BROKER_TRANSPORT_OPTIONS__predefined_queues__queue-1__url: 'http://sqs.us-east-1.localstack:4566/000000000000/queue-1'
-  CELERY_RESULT_BACKEND: "db+postgresql://${DB_USER}:${DB_PASSWORD}@postgres:5432/${DB_NAME}"
+  CELERY_RESULT_BACKEND: "${CELERY_RESULT_BACKEND:-db+${DB_URL_SYNC}}"
   CELERY_DEFAULT_QUEUE: *sqs-queue
 
 x-app-common: &app-common
@@ -33,11 +33,15 @@ x-app-common: &app-common
   extra_hosts:
     - 'localstack:192.168.28.10'
     - 'sqs.us-east-1.localstack:192.168.28.10'
+    - 'postgres:192.168.28.5'
 
 services:
   app:
     <<: *app-common
     container_name: app
+    command: uvicorn src.application:app --host 0.0.0.0 --port 8000 ${ADDITIONAL_UVICORN_CMD:-}
+    volumes:
+      - ${LDE_VOLUME:-data:/data}
     ports:
       - 127.0.0.1:8000:8000
     networks:
@@ -60,10 +64,10 @@ services:
       SERVICES: s3,cognito-idp,sqs
       LOCALSTACK_AUTH_TOKEN: "${LOCALSTACK_AUTH_TOKEN}"
       USE_SINGLE_REGION: 1
-      SMTP_HOST: "${SMTP_HOST}"
-      SMTP_PASS: "${SMTP_PASS}"
-      SMTP_USER: "${SMTP_USER}"
-      SMTP_EMAIL: "${SMTP_USER}"
+      SMTP_HOST: "${SMTP_HOST:-}"
+      SMTP_PASS: "${SMTP_PASS:-}"
+      SMTP_USER: "${SMTP_USER:-}"
+      SMTP_EMAIL: "${SMTP_USER:-}"
       LOCALSTACK_HOST: 'localstack:4566'
       DEBUG: 1
     volumes:
@@ -71,7 +75,7 @@ services:
       - "./infra/localstack/ready.d:/etc/localstack/init/ready.d"
     networks:
       internal:
-        ipv4_address: 192.168.28.10
+        ipv4_address: ${LOCALSTACK_IP:-192.168.28.10}
 
   postgres:
     image: postgres:latest
@@ -81,7 +85,12 @@ services:
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
     networks:
-      - internal
+      internal:
+        ipv4_address: ${DB_IP:-192.168.28.5}
+
+volumes:
+  data:
+
 networks:
   external:
   internal:

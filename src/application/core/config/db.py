@@ -5,7 +5,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class DBSettings(BaseSettings):
-    url: str = "postgresql+asyncpg://sample:sample@localhost:5432/sample"
+    url_async: str = "postgresql+asyncpg://sample:sample@localhost:5432/sample"
     url_sync: str = "postgresql://sample:sample@localhost:5432/sample"
     connection_kwargs: dict[str, Any] = {}
     session_kwargs: dict[str, Any] = {"autocommit": False, "expire_on_commit": False}
